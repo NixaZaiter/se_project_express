@@ -6,7 +6,9 @@ const getClothingItems = (req, res) => {
   ClothingItem.find({})
     .then((items) => res.send({ data: items }))
     .catch(() => {
-      res.status(500).send({ message: "Internal server error" });
+      res
+        .status(SOME_ERROR_CODE.SERVER_ERROR_CODE)
+        .send({ message: "Internal server error" });
     });
 };
 
@@ -30,10 +32,14 @@ const createClothingItem = (req, res) => {
             message: `${`Please select a valid weather condition between "hot", "warm" or "cold"`}`,
           });
         } else {
-          res.status(SOME_ERROR_CODE.VALIDATION_ERROR_CODE).send();
+          res.status(SOME_ERROR_CODE.VALIDATION_ERROR_CODE).send({
+            message: "Validation error",
+          });
         }
       } else {
-        res.status(500).send({ message: "Internal server error" });
+        res
+          .status(SOME_ERROR_CODE.SERVER_ERROR_CODE)
+          .send({ message: "Internal server error" });
       }
     });
 };
