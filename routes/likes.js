@@ -1,7 +1,7 @@
-const route = require("express").Router();
+const route = require("express").Router({ mergeParams: true });
 const { addLike, removeLike } = require("../controllers/likes");
 
-route.put("/items/:itemId/likes", addLike);
-route.delete("/items/:itemId/likes", removeLike);
+route.put("/", addLike);
+route.delete("/", removeLike);
 
 module.exports = route;
