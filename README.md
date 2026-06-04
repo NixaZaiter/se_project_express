@@ -19,6 +19,11 @@
   - bcryptjs, jsonwebtoken (jwt), cors
   - NoSQL database storage
 
+## Project Pitch Video
+
+Check out [this video](https://drive.google.com/file/d/1-7P7Jn7JVHzWJ-HWnyEr6iHhybaRGNYn/view), where I describe my
+project and some challenges I faced while building it.
+
 ---
 
 ```
