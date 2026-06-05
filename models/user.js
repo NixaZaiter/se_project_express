@@ -45,12 +45,18 @@ userSchema.statics.findUserByCredentials = function findUserByCredentials(
     .select("+password")
     .then((user) => {
       if (!user) {
-        return Promise.reject(new Error("Incorrect email or password"));
+        const authError = new Error("Incorrect email or password");
+        authError.statusCode = 401;
+        authError.name = "AuthenticationError";
+        return Promise.reject(authError);
       }
 
       return bcrypt.compare(password, user.password).then((matched) => {
         if (!matched) {
-          return Promise.reject(new Error("Incorrect email or password"));
+          const authError = new Error("Incorrect email or password");
+          authError.statusCode = 401;
+          authError.name = "AuthenticationError";
+          return Promise.reject(authError);
         }
         return user;
       });

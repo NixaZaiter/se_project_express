@@ -34,6 +34,13 @@ exports.getCurrentUser = (req, res) => {
 exports.createUser = (req, res) => {
   const { name, avatar, email, password } = req.body;
 
+  if (!password || typeof password !== "string") {
+    res.status(ERROR_CODES.VALIDATION_ERROR_CODE).send({
+      message: "Invalid password",
+    });
+    return;
+  }
+
   User.findOne({ email })
     .then((existingUser) => {
       if (existingUser) {
@@ -90,6 +97,13 @@ exports.createUser = (req, res) => {
 exports.loginUser = (req, res) => {
   const { email, password } = req.body;
 
+  if (!password || !email) {
+    res.status(ERROR_CODES.VALIDATION_ERROR_CODE).send({
+      message: "Email and password are required",
+    });
+    return;
+  }
+
   User.findUserByCredentials(email, password)
     .then((user) => {
       const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
@@ -97,9 +111,15 @@ exports.loginUser = (req, res) => {
       });
       res.status(200).send({ token });
     })
-    .catch(() => {
-      res.status(ERROR_CODES.VALIDATION_ERROR_CODE).send({
-        message: "Invalid email or password",
+    .catch((err) => {
+      if (err.name === "AuthenticationError") {
+        res.status(ERROR_CODES.VALIDATION_ERROR_CODE).send({
+          message: "Invalid email or password",
+        });
+        return;
+      }
+      res.status(ERROR_CODES.SERVER_ERROR_CODE).send({
+        message: "Internal server error",
       });
     });
 };
