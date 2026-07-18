@@ -1,6 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const errorHandler = require("./middleware/error-handler");
 
 const uri = "mongodb://127.0.0.1:27017/wtwr_db";
 
