@@ -16,4 +16,6 @@ app.use(cors());
 
 app.use("/", require("./routes/index"));
 
+app.use(errorHandler);
+
 app.listen(PORT, () => {});

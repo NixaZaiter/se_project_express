@@ -1,66 +1,74 @@
 const ClothingItem = require("../models/clothingItem");
-const { ERROR_CODES } = require("../utils/errors");
+const {
+  NotFoundError,
+  BadRequestError,
+  ForbiddenError,
+} = require("../utils/errors/index");
 
 // Get list of items.
-exports.getClothingItems = (req, res) => {
+exports.getClothingItems = (req, res, next) => {
   ClothingItem.find({})
-    .then((items) => res.send({ data: items }))
-    .catch(() => {
-      res
-        .status(ERROR_CODES.SERVER_ERROR_CODE)
-        .send({ message: "Internal server error" });
-    });
+    .then((items) => {
+      if (!items || items.length === 0) {
+        throw new NotFoundError("No clothing items found");
+      }
+      res.send({ data: items });
+    })
+    .catch(next);
 };
 
 // Create a new clothing item.
-exports.createClothingItem = (req, res) => {
+exports.createClothingItem = (req, res, next) => {
   const { name, weather, imageUrl } = req.body;
   ClothingItem.create({ name, weather, imageUrl, owner: req.user._id })
-    .then((item) => res.status(201).send({ data: item }))
+    .then((item) => {
+      if (!item) {
+        next(new NotFoundError("Failed to add clothing item"));
+      }
+      res.status(201).send({ data: item });
+    })
     .catch((err) => {
       if (err.name === "ValidationError") {
         if (err.errors.name) {
-          res.status(ERROR_CODES.VALIDATION_ERROR_CODE).send({
-            message: `${`Please provide a valid name between 2 and 30 characters`}`,
-          });
+          next(
+            new BadRequestError(
+              "Please provide a valid name between 2 and 30 characters"
+            )
+          );
           return;
         }
         if (err.errors.imageUrl) {
-          res.status(ERROR_CODES.VALIDATION_ERROR_CODE).send({
-            message: `${`Please provide a valid image URL`}`,
-          });
+          next(new BadRequestError("Please provide a valid image URL"));
           return;
         }
         if (err.errors.weather) {
-          res.status(ERROR_CODES.VALIDATION_ERROR_CODE).send({
-            message: `${`Please select a valid weather condition between "hot", "warm" or "cold"`}`,
-          });
+          next(
+            new BadRequestError(
+              `Please select a valid weather condition between "hot", "warm" or "cold"`
+            )
+          );
           return;
         }
-        res.status(ERROR_CODES.VALIDATION_ERROR_CODE).send({
-          message: "Validation error",
-        });
+        next(new BadRequestError("Validation error"));
         return;
       }
-      res
-        .status(ERROR_CODES.SERVER_ERROR_CODE)
-        .send({ message: "Internal server error" });
+      next(err);
     });
 };
 
 // Delete a clothing item.
-exports.deleteClothingItem = (req, res) => {
+exports.deleteClothingItem = (req, res, next) => {
   const { itemId } = req.params;
 
   ClothingItem.findById(itemId)
-    .orFail()
     .then((item) => {
+      if (!item) {
+        throw new NotFoundError("Clothing item not found");
+      }
       if (!item.owner.equals(req.user._id)) {
-        const error = new Error(
+        throw new ForbiddenError(
           "You do not have permission to delete this item"
         );
-        error.code = ERROR_CODES.FORBIDDEN_ERROR_CODE;
-        return Promise.reject(error);
       }
       return item;
     })
@@ -69,26 +77,10 @@ exports.deleteClothingItem = (req, res) => {
       res.send({ data: item });
     })
     .catch((err) => {
-      if (err.code === ERROR_CODES.FORBIDDEN_ERROR_CODE) {
-        res
-          .status(ERROR_CODES.FORBIDDEN_ERROR_CODE)
-          .send({ message: "You do not have permission to delete this item" });
-        return;
-      }
       if (err.name === "CastError" || err.type === "ObjectId") {
-        res
-          .status(ERROR_CODES.VALIDATION_ERROR_CODE)
-          .send({ message: "Invalid item ID" });
+        next(new BadRequestError("Invalid item ID"));
         return;
       }
-      if (err.name === "DocumentNotFoundError") {
-        res
-          .status(ERROR_CODES.NOT_FOUND_ERROR_CODE)
-          .send({ message: "Item not found" });
-        return;
-      }
-      res
-        .status(ERROR_CODES.SERVER_ERROR_CODE)
-        .send({ message: "Internal server error" });
+      next(err);
     });
 };

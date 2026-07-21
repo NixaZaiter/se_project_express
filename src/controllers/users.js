@@ -1,43 +1,38 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
-const { ERROR_CODES } = require("../utils/errors");
 const { JWT_SECRET } = require("../utils/config");
+const {
+  NotFoundError,
+  BadRequestError,
+  ConflictError,
+  UnauthorizedError,
+} = require("../utils/errors/index");
 
 // Get currently signed-in user by ID.
-exports.getCurrentUser = (req, res) => {
+exports.getCurrentUser = (req, res, next) => {
   User.findById(req.user._id)
-    .orFail()
     .then((user) => {
+      if (!user) {
+        throw new NotFoundError("User not found");
+      }
       res.send({ data: user });
     })
     .catch((err) => {
       if (err.name === "CastError") {
-        res.status(ERROR_CODES.VALIDATION_ERROR_CODE).send({
-          message: "Invalid user ID",
-        });
+        next(new BadRequestError("Invalid user ID"));
         return;
       }
-      if (err.name === "DocumentNotFoundError") {
-        res.status(ERROR_CODES.NOT_FOUND_ERROR_CODE).send({
-          message: "User not found",
-        });
-        return;
-      }
-      res
-        .status(ERROR_CODES.SERVER_ERROR_CODE)
-        .send({ message: "Internal server error" });
+      next(err);
     });
 };
 
 // Create a new user.
-exports.createUser = (req, res) => {
+exports.createUser = (req, res, next) => {
   const { name, avatar, email, password } = req.body;
 
   if (!password || typeof password !== "string") {
-    res.status(ERROR_CODES.VALIDATION_ERROR_CODE).send({
-      message: "Invalid password",
-    });
+    next(new BadRequestError("Invalid password"));
     return;
   }
 
@@ -58,49 +53,41 @@ exports.createUser = (req, res) => {
     })
     .catch((err) => {
       if (err.code === 11000) {
-        res.status(ERROR_CODES.DUPLICATE_ERROR_CODE).send({
-          message: "User with this email already exists",
-        });
+        next(new ConflictError("User with this email already exists"));
         return;
       }
       if (err.name === "ValidationError") {
         if (err.errors.name) {
-          res.status(ERROR_CODES.VALIDATION_ERROR_CODE).send({
-            message: `Please provide a valid name between 2 and 30 characters`,
-          });
+          next(
+            new BadRequestError(
+              "Please provide a valid name between 2 and 30 characters"
+            )
+          );
           return;
         }
+
         if (err.errors.avatar) {
-          res.status(ERROR_CODES.VALIDATION_ERROR_CODE).send({
-            message: `Please provide a valid avatar URL`,
-          });
+          next(new BadRequestError("Please provide a valid avatar URL"));
           return;
         }
+
         if (err.errors.email) {
-          res.status(ERROR_CODES.VALIDATION_ERROR_CODE).send({
-            message: `Please provide a valid email address`,
-          });
+          next(new BadRequestError("Please provide a valid email address"));
           return;
         }
-        res.status(ERROR_CODES.VALIDATION_ERROR_CODE).send({
-          message: "Validation error",
-        });
+        next(new BadRequestError("Validation error"));
         return;
       }
-      res.status(ERROR_CODES.SERVER_ERROR_CODE).send({
-        message: "Internal server error",
-      });
+      next(err);
     });
 };
 
 // Login an existing user.
-exports.loginUser = (req, res) => {
+exports.loginUser = (req, res, next) => {
   const { email, password } = req.body;
 
   if (!password || !email) {
-    res.status(ERROR_CODES.VALIDATION_ERROR_CODE).send({
-      message: "Email and password are required",
-    });
+    next(new BadRequestError("Email and password are required"));
     return;
   }
 
@@ -113,19 +100,15 @@ exports.loginUser = (req, res) => {
     })
     .catch((err) => {
       if (err.name === "AuthenticationError") {
-        res.status(ERROR_CODES.VALIDATION_ERROR_CODE).send({
-          message: "Invalid email or password",
-        });
+        next(new UnauthorizedError("Invalid email or password"));
         return;
       }
-      res.status(ERROR_CODES.SERVER_ERROR_CODE).send({
-        message: "Internal server error",
-      });
+      next(err);
     });
 };
 
 // Update an existing user. (Name and Avatar only)
-exports.updateUser = (req, res) => {
+exports.updateUser = (req, res, next) => {
   const { name, avatar } = req.body;
   User.findByIdAndUpdate(
     req.user._id,
@@ -134,33 +117,31 @@ exports.updateUser = (req, res) => {
   )
     .then((user) => {
       if (!user) {
-        return res.status(ERROR_CODES.NOT_FOUND_ERROR_CODE).send({
-          message: "User not found",
-        });
+        throw new NotFoundError("User not found");
       }
       return res.send({ data: user });
     })
     .catch((err) => {
+      if (err.name === "CastError") {
+        next(new BadRequestError("Invalid user ID"));
+        return;
+      }
       if (err.name === "ValidationError") {
         if (err.errors.name) {
-          res.status(ERROR_CODES.VALIDATION_ERROR_CODE).send({
-            message: `Please provide a valid name between 2 and 30 characters`,
-          });
+          next(
+            new BadRequestError(
+              "Please provide a valid name between 2 and 30 characters"
+            )
+          );
           return;
         }
         if (err.errors.avatar) {
-          res.status(ERROR_CODES.VALIDATION_ERROR_CODE).send({
-            message: `Please provide a valid avatar URL`,
-          });
+          next(new BadRequestError("Please provide a valid avatar URL"));
           return;
         }
-        res.status(ERROR_CODES.VALIDATION_ERROR_CODE).send({
-          message: "Validation error",
-        });
+        next(new BadRequestError("Validation error"));
         return;
       }
-      res.status(ERROR_CODES.SERVER_ERROR_CODE).send({
-        message: "Internal server error",
-      });
+      next(err);
     });
 };
