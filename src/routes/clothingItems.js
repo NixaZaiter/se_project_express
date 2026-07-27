@@ -1,5 +1,9 @@
 const route = require("express").Router();
 const auth = require("../middleware/auth");
+const {
+  validateCreateClothingItem,
+  validateItemId,
+} = require("../middleware/validation");
 
 const {
   getClothingItems,
@@ -10,7 +14,7 @@ const {
 route.get("/", getClothingItems);
 
 route.use(auth);
-route.post("/", createClothingItem);
-route.delete("/:itemId", deleteClothingItem);
+route.post("/", validateCreateClothingItem, createClothingItem);
+route.delete("/:itemId", validateItemId, deleteClothingItem);
 
 module.exports = route;

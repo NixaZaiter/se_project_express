@@ -1,6 +1,9 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const { errors } = require("celebrate");
+const { requestLogger, errorLogger } = require("./middleware/logger");
+const errorHandler = require("./middleware/error-handler");
 
 const uri = "mongodb://127.0.0.1:27017/wtwr_db";
 
@@ -13,6 +16,11 @@ mongoose.connect(uri);
 app.use(express.json());
 app.use(cors());
 
+app.use(requestLogger);
 app.use("/", require("./routes/index"));
+
+app.use(errorLogger);
+app.use(errors());
+app.use(errorHandler);
 
 app.listen(PORT, () => {});

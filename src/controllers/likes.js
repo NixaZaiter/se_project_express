@@ -1,26 +1,20 @@
 const ClothingItem = require("../models/clothingItem");
-const { ERROR_CODES } = require("../utils/errors");
+const { BadRequestError, NotFoundError } = require("../utils/errors/index");
 
-const handleError = (err, res) => {
+const handleError = (err, res, next) => {
   if (err.name === "CastError") {
-    res
-      .status(ERROR_CODES.VALIDATION_ERROR_CODE)
-      .send({ message: "Invalid item ID" });
+    next(new BadRequestError("Invalid item ID"));
     return;
   }
   if (err.name === "DocumentNotFoundError") {
-    res
-      .status(ERROR_CODES.NOT_FOUND_ERROR_CODE)
-      .send({ message: "Item not found" });
+    next(new NotFoundError("Item not found"));
     return;
   }
-  res
-    .status(ERROR_CODES.SERVER_ERROR_CODE)
-    .send({ message: "Internal server error" });
+  next(err);
 };
 
 // Logic for adding a like
-exports.addLike = (req, res) =>
+exports.addLike = (req, res, next) =>
   ClothingItem.findByIdAndUpdate(
     req.params.itemId,
     { $addToSet: { likes: req.user._id } },
@@ -28,10 +22,10 @@ exports.addLike = (req, res) =>
   )
     .orFail()
     .then((updatedItem) => res.send({ data: updatedItem }))
-    .catch((err) => handleError(err, res));
+    .catch((err) => handleError(err, res, next));
 
 // Logic for removing a like
-exports.removeLike = (req, res) =>
+exports.removeLike = (req, res, next) =>
   ClothingItem.findByIdAndUpdate(
     req.params.itemId,
     { $pull: { likes: req.user._id } },
@@ -39,4 +33,4 @@ exports.removeLike = (req, res) =>
   )
     .orFail()
     .then((updatedItem) => res.send({ data: updatedItem }))
-    .catch((err) => handleError(err, res));
+    .catch((err) => handleError(err, res, next));
