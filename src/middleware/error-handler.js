@@ -1,10 +1,4 @@
 module.exports = (err, req, res, next) => {
-  console.log({
-    name: err.name,
-    statusCode: err.statusCode,
-    message: err.message,
-  });
-
   console.error(err);
 
   const { statusCode = 500, message } = err;
