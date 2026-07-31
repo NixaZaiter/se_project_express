@@ -1,8 +1,10 @@
 const router = require("express").Router();
+
 const clothingItems = require("./clothingItems");
 const users = require("./users");
 const likes = require("./likes");
 const auth = require("../middleware/auth");
+
 const {
   validateCreateUser,
   validateLogin,
@@ -10,6 +12,12 @@ const {
 } = require("../middleware/validation");
 const { NotFoundError } = require("../utils/errors/index");
 const { loginUser, createUser } = require("../controllers/users");
+
+router.get("/crash-test", () => {
+  setTimeout(() => {
+    throw new Error("Server will crash now");
+  }, 0);
+});
 
 router.post("/signin", validateLogin, loginUser);
 router.post("/signup", validateCreateUser, createUser);
