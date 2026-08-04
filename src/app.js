@@ -18,11 +18,6 @@ app.use(express.json());
 app.use(cors());
 
 app.use(requestLogger);
-app.get("/crash-test", () => {
-  setTimeout(() => {
-    throw new Error("Server will crash now");
-  }, 0);
-});
 app.use("/", require("./routes/index"));
 
 app.use(errorLogger);

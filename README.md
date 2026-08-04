@@ -1,3 +1,39 @@
+// Final Commit (Sprint 15)
+
+# WTWR (What to Wear?): Back End
+
+## Sprint 15 Project Submission
+
+- Description:
+  Setting up the authentication for the back-end of the WTWR project.
+
+- Functionality:
+
+  - Additional custom errors have been added for unathorized access, attempts to create new users with duplicate emails,
+    and forbidden actions (i.e. deleting other user's cards.)
+  - Authentication middleware has been added to prevent user's from accessing information they shouldn't have access to.
+
+- Technology and Techniques:
+
+  - MongoDB, Express.JS, React.JS, Node.JS, ESLinter, Prettier
+  - bcryptjs, jsonwebtoken (jwt), cors
+  - NoSQL database storage
+  - JOI, winston
+
+## Links
+
+- Project Domain: https://www.todays-clothes.thelich.monster/
+- Frontend GitHub repo: https://github.com/NixaZaiter/se_project_react
+
+## Project Pitch Video
+
+Check out these videos , where I describe my
+project and some challenges I faced while building it.
+
+- [Sprint 15]()
+- [Sprint 13](https://drive.google.com/file/d/1-7P7Jn7JVHzWJ-HWnyEr6iHhybaRGNYn/view)
+
+```
 // Final Commit (Sprint 13)
 
 # WTWR (What to Wear?): Back End
@@ -23,6 +59,7 @@
 
 Check out [this video](https://drive.google.com/file/d/1-7P7Jn7JVHzWJ-HWnyEr6iHhybaRGNYn/view), where I describe my
 project and some challenges I faced while building it.
+```
 
 ---
 
